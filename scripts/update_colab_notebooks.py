@@ -174,14 +174,14 @@ models = [
         "filename": "download-bark.ipynb",
         "downloads": [
             ("suno/bark", [
-                "processor.json",
-                "vocab.txt",
-                "merges.txt",
                 "config.json",
                 "generation_config.json",
-                "text_2.pt",
-                "coarse_2.pt",
-                "fine_2.pt"
+                "pytorch_model.bin",
+                "tokenizer.json",
+                "vocab.txt",
+                "tokenizer_config.json",
+                "special_tokens_map.json",
+                "speaker_embeddings_path.json"
             ])
         ]
     },
