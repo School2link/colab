@@ -242,7 +242,161 @@ print("All models mounted from individual datasets!")
 
 ---
 
-## 4. Multi-Account Setup
+## 4. Adding New Models to Kaggle
+
+This is the repeatable process for adding any new AI model to the engine.
+
+### Step-by-Step
+
+#### 1. Decide the model details
+
+| Question | Example Answer |
+|----------|---------------|
+| Model name | `FLUX.1-schnell` |
+| HuggingFace repo | `black-forest-labs/FLUX.1-schnell` |
+| Files needed | `*.safetensors`, `config.json`, etc. |
+| Estimated size | ~12GB |
+| Kaggle dataset name | `kingtechie/flux-model` |
+| Dataset slug | `flux-model` |
+
+**Key rule:** Each model gets its own dataset. Never combine models into one dataset (the 19.5GB working directory limit makes combined downloads fail).
+
+#### 2. Create the download notebook
+
+Run from the project root:
+
+```bash
+python scripts/create_notebooks.py
+```
+
+Or manually create `colab/download-[name].ipynb` with this pattern:
+
+```python
+import os
+import shutil
+from huggingface_hub import hf_hub_download
+
+MODEL_DIR = "/kaggle/working/[dataset-slug]"
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+print("=== Downloading [Model Name] ===")
+# From [huggingface/repo-id]
+for file_name in ["file1.safetensors", "file2.bin", "config.json"]:
+    print(f"Downloading {file_name}...")
+    try:
+        hf_hub_download(
+            repo_id="[huggingface/repo-id]",
+            filename=file_name,
+            local_dir=MODEL_DIR
+        )
+        print("  OK")
+    except Exception as e:
+        print(f"  Error: {e}")
+    # CRITICAL: Clean HF cache after EACH file to stay under 19.5GB
+    cache_dir = os.path.expanduser('~/.cache/huggingface')
+    if os.path.exists(cache_dir):
+        shutil.rmtree(cache_dir)
+
+# Verify
+total_size = 0
+file_count = 0
+for dirpath, dirnames, filenames in os.walk(MODEL_DIR):
+    for f in filenames:
+        fp = os.path.join(dirpath, f)
+        total_size += os.path.getsize(fp)
+        file_count += 1
+print(f"Done! Files: {file_count}, Size: {total_size / 1024**3:.2f} GB")
+```
+
+**Critical lessons learned:**
+- Use `hf_hub_download` (NOT `snapshot_download`) — `snapshot_download` caches everything before copying, always fails
+- Clean `~/.cache/huggingface` after EACH file — the cache lives on the same 19.5GB volume
+- Never use `cache_dir="/tmp/hf_cache"` — `/tmp` is on the same volume
+- For Bark-style models with near-duplicate files (e.g. `text_2.pt` vs `text_0.pt`), only download the core files
+
+#### 3. Add upload cell
+
+Add a second code cell to auto-publish:
+
+```python
+import kagglehub
+
+DATASET_ID = "kingtechie/[dataset-slug]"
+
+print(f"\n=== Publishing as dataset: {DATASET_ID} ===")
+kagglehub.dataset_upload(
+    DATASET_ID,
+    MODEL_DIR,
+    version_notes="Initial download - [Model Name]"
+)
+print(f"Published: https://www.kaggle.com/datasets/{DATASET_ID}")
+```
+
+#### 4. Push to Kaggle
+
+```powershell
+# Copy notebook to kaggle-push/
+Copy-Item colab/download-[name].ipynb kaggle-push/
+
+# Update kernel-metadata.json
+# Set id, title, code_file
+
+# Push
+kaggle kernels push -p ./kaggle-push
+```
+
+Monitor until `COMPLETE`:
+```powershell
+while ($true) {
+    $r = kaggle kernels status kingtechie/fako-online-download-[name] 2>&1
+    Write-Output "$(Get-Date -Format 'HH:mm:ss') - $r"
+    if ($r -match "complete" -or $r -match "error") { break }
+    Start-Sleep -Seconds 60
+}
+```
+
+#### 5. Update this guide
+
+Add the new model to these tables in this file:
+- **Kaggle Datasets** (Section 3)
+- **Kaggle Session Paths** (Section 3)
+- **Individual Download Notebooks** (Section 3)
+
+#### 6. Update production notebooks (if needed)
+
+If a production notebook uses the new model, update its Cell 1 paths:
+
+```python
+NEW_MODEL_DIR = "/kaggle/input/[dataset-slug]"
+```
+
+And update the markdown instructions to list the new dataset in "Add datasets".
+
+#### 7. Update download scripts
+
+Add the model to `scripts/create_notebooks.py` and `scripts/update_colab_notebooks.py`.
+
+#### 8. Commit and push
+
+```bash
+git add -A
+git commit -m "Add [Model Name] to Kaggle"
+git push
+```
+
+### Troubleshooting New Model Downloads
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `No space left on device` | HF cache filling 19.5GB volume | Clean cache after each file |
+| `BackendError: Please upload at least one file` | Upload ran before downloads finished | Check cell execution order |
+| `403 Forbidden` on upload | Dataset doesn't exist yet or permissions | Create dataset first, or check API token |
+| `snapshot_download` fails | Caches all files before copying | Use `hf_hub_download` instead |
+| Download is a near-duplicate | e.g. `text_0.pt` vs `text_2.pt` | Only download the core files needed |
+
+---
+
+## 5. Multi-Account Setup
 
 Kaggle limits GPU usage to ~30 hours/week per account. For higher throughput, use a **primary + backup** account strategy.
 
@@ -282,7 +436,7 @@ When Account A hits the ~30 hr/week GPU quota:
 
 ---
 
-## 5. Project Structure
+## 6. Project Structure
 
 ```
 LocalContents/
@@ -304,22 +458,27 @@ LocalContents/
     voiceovers/                      # Pre-generated audio
   scripts/
     generate-talking-head.js         # CLI for Kaggle API
-  kaggle/
-    full-pipeline-server.ipynb       # Bark + SadTalker + Easy-Wav2Lip (port 8000)
-    broll-server.ipynb               # Wan 2.1 B-Roll (port 8001)
-    styled-scene-server.ipynb        # AnimateDiff + ControlNet (port 8002)
-    download-wan21.ipynb             # Downloads Wan 2.1 → kingtechie/wan21-model
-    download-animatediff.ipynb       # Downloads AnimateDiff → kingtechie/animatediff-model
-    download-sd15.ipynb              # Downloads SD 1.5 → kingtechie/sd15-model
-    download-bark.ipynb              # Downloads Bark TTS → kingtechie/bark-model
-    download-sadtalker.ipynb         # Downloads SadTalker → kingtechie/sadtalker-model
-    download-wav2lip.ipynb           # Downloads Easy-Wav2Lip → kingtechie/wav2lip-model
-    *-metadata.json                  # Kaggle kernel metadata files
+    create_notebooks.py              # Generates download notebooks
+    update_colab_notebooks.py        # Updates download notebooks
+    update_production_notebooks.py   # Updates server notebooks
+    kaggle-download-models.ps1       # Orchestration script
+  colab/
+    full-pipeline-server-kaggle.ipynb  # Bark + SadTalker + Easy-Wav2Lip (port 8000)
+    broll-server-kaggle.ipynb          # Wan 2.1 B-Roll (port 8001)
+    styled-scene-server-kaggle.ipynb   # AnimateDiff + ControlNet (port 8002)
+    download-wan21.ipynb               # Downloads Wan 2.1 → kingtechie/wan21-model
+    download-animatediff.ipynb         # Downloads AnimateDiff → kingtechie/animatediff-model
+    download-sd15.ipynb                # Downloads SD 1.5 → kingtechie/sd15-model
+    download-bark.ipynb                # Downloads Bark TTS → kingtechie/bark-model
+    download-sadtalker.ipynb           # Downloads SadTalker → kingtechie/sadtalker-model
+    download-wav2lip.ipynb             # Downloads Easy-Wav2Lip → kingtechie/wav2lip-model
+  kaggle-push/                        # Working dir for Kaggle kernel pushes
+    kernel-metadata.json
 ```
 
 ---
 
-## 6. API Endpoints
+## 7. API Endpoints
 
 | Endpoint         | Method | Input                                  | Output               |
 | ---------------- | ------ | -------------------------------------- | -------------------- |
@@ -333,7 +492,7 @@ LocalContents/
 
 ---
 
-## 7. Workflow
+## 8. Workflow
 
 ### Creating New Content
 
@@ -370,7 +529,7 @@ LocalContents/
 
 ---
 
-## 8. CLI Commands
+## 9. CLI Commands
 
 ```bash
 # Generate avatar image from text prompt
@@ -395,7 +554,7 @@ npm run render:churches
 
 ---
 
-## 9. Remotion Scene Types
+## 10. Remotion Scene Types
 
 | Type                  | talkScene | video field      | Behavior                        |
 | --------------------- | --------- | ---------------- | ------------------------------- |
@@ -405,7 +564,7 @@ npm run render:churches
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 | Issue                     | Solution                                             |
 | ------------------------- | ---------------------------------------------------- |
