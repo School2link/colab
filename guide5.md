@@ -740,13 +740,118 @@ Each server provides different AI capabilities:
 | B-Roll | 8001 | `broll-server-kaggle.ipynb` | wan21-model | Wan 2.1 text-to-video |
 | Styled Scene | 8002 | `styled-scene-server-kaggle.ipynb` | sd15-model, animatediff-model | SD 1.5 image gen, AnimateDiff animation |
 
-**To start a server:**
-1. Open the needed Kaggle notebook
-2. Set Accelerator to GPU T4 x2
-3. Attach the required datasets via **Add Data**
-4. Run all cells
-5. Copy the ngrok URL to `.env` as `KAGGLE_API_URL`
-6. Run CLI commands locally
+### Starting a Kaggle Server (Step-by-Step)
+
+**Step 1: Open the Kaggle notebook**
+
+Go to [kaggle.com/code](https://www.kaggle.com/code) and open the notebook you need:
+
+| Task | Open This Notebook |
+|------|-------------------|
+| Talking head (TTS + avatar + lip sync) | `full-pipeline-server-kaggle.ipynb` |
+| B-Roll video generation | `broll-server-kaggle.ipynb` |
+| Image generation or styled animation | `styled-scene-server-kaggle.ipynb` |
+
+**Step 2: Set the GPU accelerator**
+
+1. Click the **Settings gear** icon (top right)
+2. Under **Accelerator**, select **GPU T4 x2**
+3. This gives you 32GB VRAM (enough for all models)
+
+**Step 3: Enable Internet access**
+
+1. In the same Settings panel
+2. Toggle **Internet** → **On**
+3. Required for downloading models and ngrok tunnel
+
+**Step 4: Attach the required datasets**
+
+1. Click **+ Add Data** (right panel)
+2. Search for each dataset by name: `kingtechie/[model-name]`
+3. Click **Attach** for each one
+
+Example for Full Pipeline server:
+- Search `kingtechie/bark-model` → Attach
+- Search `kingtechie/sadtalker-model` → Attach
+- Search `kingtechie/wav2lip-model` → Attach
+
+**Step 5: Run all cells**
+
+1. Click **Runtime** → **Run All** (or press `Ctrl+F9`)
+2. Wait for all cells to complete (first run takes 2-5 minutes for model loading)
+3. The last cell starts the FastAPI server + ngrok tunnel
+
+**Step 6: Find the ngrok URL**
+
+Scroll to the **output of the last cell**. Look for a line like:
+
+```
+Running on https://abc123-def456.ngrok-free.app
+```
+
+Copy the full URL including `https://`.
+
+**Step 7: Update your .env file**
+
+Open `.env` in the project root and paste the URL:
+
+```
+KAGGLE_API_URL=https://abc123-def456.ngrok-free.app
+```
+
+Save the file.
+
+**Step 8: Verify the connection**
+
+Run this command locally:
+
+```bash
+node scripts/generate-talking-head.js --check --api https://abc123-def456.ngrok-free.app
+```
+
+Expected output:
+```json
+{"status": "ok", "models": ["bark", "sadtalker", "wav2lip"]}
+```
+
+### Which Server for What
+
+| I need to... | Start this server | Port |
+|-------------|-------------------|------|
+| Generate a voiceover (Bark TTS) | Full Pipeline | 8000 |
+| Animate a photo with voice (SadTalker) | Full Pipeline | 8000 |
+| Refine lip sync (Easy-Wav2Lip) | Full Pipeline | 8000 |
+| Generate a portrait/avatar (SD 1.5) | Styled Scene | 8002 |
+| Generate a background image (SD 1.5) | Styled Scene | 8002 |
+| Generate B-Roll video (Wan 2.1) | B-Roll | 8001 |
+| Animate image in a style (AnimateDiff) | Styled Scene | 8002 |
+
+### Session Limits and Tips
+
+| Limit | Value | Notes |
+|-------|-------|-------|
+| Session timeout | ~12 hours | Kaggle auto-stops idle sessions |
+| GPU quota | ~30 hrs/week per account | Use backup account when exceeded |
+| Working directory | 19.5 GB | Models are in datasets, not working dir |
+| Max dataset size | 100 GB per dataset | Each model has its own dataset |
+
+**Tips:**
+- First run is slower (models load into GPU memory)
+- Subsequent runs in same session are faster (cached)
+- Keep the notebook tab open to prevent idle timeout
+- If ngrok URL stops working, restart the notebook and get a new URL
+
+### Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| ngrok URL not appearing | Internet not enabled | Settings → Internet → On |
+| `Connection refused` | Server not running | Run all cells in the notebook |
+| `404 Not Found` | Wrong URL or stale ngrok | Copy new URL from notebook output |
+| `GPU OOM` | Not enough VRAM | Ensure T4 x2 accelerator is selected |
+| `No module named 'bark'` | Models not attached | Add datasets via + Add Data |
+| Session stopped | Idle timeout or quota exceeded | Restart notebook or switch accounts |
+| ngrok rate limit | Too many restarts | Wait 1 minute, then restart |
 
 ---
 
