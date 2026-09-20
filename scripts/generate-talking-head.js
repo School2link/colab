@@ -12,7 +12,7 @@ Options:
   --text <text>      Text with emotional tags for Bark TTS (optional if using --audio)
   --voice <preset>   Bark voice preset (default: v2/en_speaker_6)
   --prompt <text>    Text prompt to generate an image via SD 1.5
-  --api <url>        Colab API URL from ngrok (or set COLAB_API_URL env var)
+  --api <url>        Kaggle notebook API URL from ngrok (or set KAGGLE_API_URL env var)
   --output <path>    Output path (default: public/assets/talking-head.mp4)
   --timeout <ms>     Request timeout in ms (default: 300000 = 5 min)
   --check            Check if the API server is reachable
@@ -90,9 +90,9 @@ async function checkHealth(apiUrl) {
 }
 
 async function generateImage(opts) {
-  const apiUrl = opts.apiUrl || process.env.COLAB_API_URL;
+  const apiUrl = opts.apiUrl || process.env.KAGGLE_API_URL;
   if (!apiUrl) {
-    console.error("Error: --api or COLAB_API_URL env var required");
+    console.error("Error: --api or KAGGLE_API_URL env var required");
     process.exit(1);
   }
 
@@ -179,9 +179,9 @@ async function generateImage(opts) {
 }
 
 async function generateAvatar(opts) {
-  const apiUrl = opts.apiUrl || process.env.COLAB_API_URL;
+  const apiUrl = opts.apiUrl || process.env.KAGGLE_API_URL;
   if (!apiUrl) {
-    console.error("Error: --api or COLAB_API_URL env var required");
+    console.error("Error: --api or KAGGLE_API_URL env var required");
     process.exit(1);
   }
 
@@ -302,9 +302,9 @@ async function main() {
   const opts = parseArgs();
 
   if (opts.check) {
-    const apiUrl = opts.apiUrl || process.env.COLAB_API_URL;
+    const apiUrl = opts.apiUrl || process.env.KAGGLE_API_URL;
     if (!apiUrl) {
-      console.error("Error: --api or COLAB_API_URL env var required");
+      console.error("Error: --api or KAGGLE_API_URL env var required");
       process.exit(1);
     }
     const ok = await checkHealth(apiUrl);

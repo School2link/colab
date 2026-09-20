@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-export interface ColabApiOptions {
+export interface KaggleApiOptions {
   apiUrl: string;
   imagePath: string;
   audioPath: string;
@@ -10,7 +10,7 @@ export interface ColabApiOptions {
   refineLips?: boolean;
 }
 
-export interface ColabApiResult {
+export interface KaggleApiResult {
   videoPath: string;
   fileSize: number;
 }
@@ -42,9 +42,9 @@ export interface GenerateBrollResult {
   fileSize: number;
 }
 
-export async function generateTalkingHeadColab(
-  options: ColabApiOptions
-): Promise<ColabApiResult> {
+export async function generateTalkingHeadKaggle(
+  options: KaggleApiOptions
+): Promise<KaggleApiResult> {
   const {
     apiUrl,
     imagePath,
@@ -64,7 +64,7 @@ export async function generateTalkingHeadColab(
     throw new Error(`Audio not found: ${resolvedAudioPath}`);
   }
 
-  console.log(`[colab-api] Connecting to ${apiUrl}...`);
+  console.log(`[kaggle-api] Connecting to ${apiUrl}...`);
 
   const imageBuffer = fs.readFileSync(resolvedImagePath);
   const audioBuffer = fs.readFileSync(resolvedAudioPath);
@@ -110,7 +110,7 @@ export async function generateTalkingHeadColab(
 
   const body = Buffer.concat(bodyParts);
 
-  console.log(`[colab-api] Sending image (${(imageBuffer.length / 1024).toFixed(0)}KB) + audio (${(audioBuffer.length / 1024).toFixed(0)}KB)...`);
+  console.log(`[kaggle-api] Sending image (${(imageBuffer.length / 1024).toFixed(0)}KB) + audio (${(audioBuffer.length / 1024).toFixed(0)}KB)...`);
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -148,7 +148,7 @@ export async function generateTalkingHeadColab(
 
     fs.writeFileSync(resolvedOutputPath, videoBuffer);
 
-    console.log(`[colab-api] Video saved: ${resolvedOutputPath} (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+    console.log(`[kaggle-api] Video saved: ${resolvedOutputPath} (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
 
     return {
       videoPath: resolvedOutputPath,
@@ -163,7 +163,7 @@ export async function generateTalkingHeadColab(
   }
 }
 
-export async function generateImageColab(
+export async function generateImageKaggle(
   options: GenerateImageOptions
 ): Promise<GenerateImageResult> {
   const {
@@ -175,7 +175,7 @@ export async function generateImageColab(
     timeoutMs = 120000,
   } = options;
 
-  console.log(`[colab-api] Generating image: "${prompt}"...`);
+  console.log(`[kaggle-api] Generating image: "${prompt}"...`);
 
   const boundary = `----FormBoundary${Date.now().toString(16)}`;
 
@@ -243,7 +243,7 @@ export async function generateImageColab(
 
     fs.writeFileSync(resolvedOutputPath, imageBuffer);
 
-    console.log(`[colab-api] Image saved: ${resolvedOutputPath} (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
+    console.log(`[kaggle-api] Image saved: ${resolvedOutputPath} (${(imageBuffer.length / 1024).toFixed(0)}KB)`);
 
     return {
       imagePath: resolvedOutputPath,
@@ -258,7 +258,7 @@ export async function generateImageColab(
   }
 }
 
-export async function generateBrollColab(
+export async function generateBrollKaggle(
   options: GenerateBrollOptions
 ): Promise<GenerateBrollResult> {
   const {
@@ -269,7 +269,7 @@ export async function generateBrollColab(
     timeoutMs = 300000,
   } = options;
 
-  console.log(`[colab-api] Generating B-Roll: "${prompt}"...`);
+  console.log(`[kaggle-api] Generating B-Roll: "${prompt}"...`);
 
   const boundary = `----FormBoundary${Date.now().toString(16)}`;
 
@@ -329,7 +329,7 @@ export async function generateBrollColab(
 
     fs.writeFileSync(resolvedOutputPath, videoBuffer);
 
-    console.log(`[colab-api] B-Roll saved: ${resolvedOutputPath} (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
+    console.log(`[kaggle-api] B-Roll saved: ${resolvedOutputPath} (${(videoBuffer.length / 1024 / 1024).toFixed(1)}MB)`);
 
     return {
       videoPath: resolvedOutputPath,
@@ -344,7 +344,7 @@ export async function generateBrollColab(
   }
 }
 
-export async function checkColabHealth(apiUrl: string): Promise<boolean> {
+export async function checkKaggleHealth(apiUrl: string): Promise<boolean> {
   try {
     const response = await fetch(`${apiUrl}/health`);
     if (!response.ok) return false;

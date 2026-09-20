@@ -9,7 +9,7 @@
   "enable_tpu": false,
   "enable_internet": true,
   "dataset_sources": [
-    "fako-online/fako-bark-sadtalker-wav2lip"
+    "kingtechie/fako-ai-models"
   ],
   "kernel_sources": [],
   "competition_sources": [],
