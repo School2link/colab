@@ -198,29 +198,30 @@ Voice Presets: v2/en_speaker_0 through v2/en_speaker_9
 
 ### Google Drive (Colab Platform)
 
-#### Account A: Visual & Scene Generation (~13.2 GB / 15 GB)
+#### Account A: Visual & Scene Generation (~11.0 GB / 15 GB)
 
-| Model | Size | Path |
-|-------|------|------|
-| Wan 2.1 / 2.6 (1.3B) | ~6.5 GB | MyDrive/AI_Models/Wan2.1-1.3B/ |
-| AnimateDiff + ControlNet | ~3.5 GB | MyDrive/AI_Models/AnimateDiff/ |
-| Base SD 1.5 Model | ~3.2 GB | MyDrive/AI_Models/SD1.5_Base/ |
+| Model | Size | Path | Notes |
+|-------|------|------|-------|
+| Wan 2.1 (1.3B) | ~4.5 GB | MyDrive/AI_Models/Wan2.1-1.3B/ | safetensors only |
+| AnimateDiff + ControlNet | ~3.5 GB | MyDrive/AI_Models/AnimateDiff/ | |
+| Base SD 1.5 Model | ~3.0 GB | MyDrive/AI_Models/SD1.5_Base/ | pruned .safetensors |
 
-#### Account B: Audio & Talking-Head + Outputs (~8.5 GB / 15 GB)
+#### Account B: Audio, Talking-Head & Output Storage (~8.5 GB / 15 GB)
 
 | Model | Size | Path |
 |-------|------|------|
 | Bark TTS (Suno) | ~4.5 GB | AI_Avatar_Models/Bark_TTS/ |
 | SadTalker | ~2.5 GB | AI_Avatar_Models/SadTalker/ |
 | Easy-Wav2Lip | ~1.5 GB | AI_Avatar_Models/Easy-Wav2Lip/ |
-| Rendered Outputs | ~2.0 GB free | AI_Avatar_Models/Rendered_Outputs/ |
+| Rendered Outputs | ~3.5 GB free | AI_Avatar_Models/Rendered_Outputs/ |
 
 ### Kaggle Datasets
 
 | Dataset Name | Models | Size | URL |
 |--------------|--------|------|-----|
-| kingtechie/fako-bark-sadtalker-wav2lip | Bark, SadTalker, Easy-Wav2Lip | ~8.5 GB | https://www.kaggle.com/datasets/kingtechie/fako-bark-sadtalker-wav2lip |
-| kingtechie/fako-wan-animatediff-sd15 | Wan 2.1, AnimateDiff, SD 1.5 | ~13.2 GB | https://www.kaggle.com/datasets/kingtechie/fako-wan-animatediff-sd15 |
+| kingtechie/fako-ai-models | All 6 models (Bark, SadTalker, Easy-Wav2Lip, Wan 2.1, AnimateDiff, SD 1.5) | ~21.7 GB | https://www.kaggle.com/datasets/kingtechie/fako-ai-models |
+
+Kaggle provides 100GB of private dataset storage, so all models fit comfortably in a single dataset.
 
 ### Downloading Models to the Cloud
 
@@ -243,9 +244,9 @@ drive.mount('/content/drive')
 target_folder = "/content/drive/MyDrive/AI_Models"
 os.makedirs(target_folder, exist_ok=True)
 
-# Download directly into Drive (0% local internet used)
+# Download only safetensors files (skips .bin, .pt, .ckpt to save space)
 !pip install -q huggingface_hub
-!huggingface-cli download Wan-AI/Wan2.1-T2V-1.3B --local-dir {target_folder}/Wan2.1-1.3B
+!huggingface-cli download Wan-AI/Wan2.1-T2V-1.3B --include "*.safetensors" --local-dir {target_folder}/Wan2.1-1.3B
 ```
 
 #### For Kaggle (First-Time Setup)
@@ -266,14 +267,44 @@ os.makedirs(target_folder, exist_ok=True)
 
 #### Model Download Commands
 
-| Model | Hugging Face Repo | Target (Drive) | Target (Kaggle) |
-|-------|-------------------|----------------|-----------------|
-| Wan 2.1 (1.3B) | Wan-AI/Wan2.1-T2V-1.3B | AI_Models/Wan2.1-1.3B/ | /kaggle/working/models/Wan2.1-1.3B/ |
-| AnimateDiff | guoyww/animatediff | AI_Models/AnimateDiff/ | /kaggle/working/models/AnimateDiff/ |
-| SD 1.5 | runwayml/stable-diffusion-v1-5 | AI_Models/SD1.5_Base/ | /kaggle/working/models/SD1.5_Base/ |
-| Bark | suno/bark | AI_Avatar_Models/Bark_TTS/ | /kaggle/working/models/Bark_TTS/ |
-| SadTalker | camenduru/SadTalker | AI_Avatar_Models/SadTalker/ | /kaggle/working/models/SadTalker/ |
-| Easy-Wav2Lip | numz/wav2lip_studio-0.2 | AI_Avatar_Models/Easy-Wav2Lip/ | /kaggle/working/models/Easy-Wav2Lip/ |
+| Model | Hugging Face Repo | Target (Drive) | Target (Kaggle) | Drive Size | Kaggle Size |
+|-------|-------------------|----------------|-----------------|------------|-------------|
+| Wan 2.1 (1.3B) | Wan-AI/Wan2.1-T2V-1.3B | AI_Models/Wan2.1-1.3B/ | /kaggle/working/models/Wan2.1-1.3B/ | ~4.5 GB | ~6.5 GB |
+| AnimateDiff | guoyww/animatediff | AI_Models/AnimateDiff/ | /kaggle/working/models/AnimateDiff/ | ~3.5 GB | ~3.5 GB |
+| SD 1.5 | runwayml/stable-diffusion-v1-5 | AI_Models/SD1.5_Base/ | /kaggle/working/models/SD1.5_Base/ | ~3.0 GB | ~3.2 GB |
+| Bark | suno/bark | AI_Avatar_Models/Bark_TTS/ | /kaggle/working/models/Bark_TTS/ | ~4.5 GB | ~4.5 GB |
+| SadTalker | camenduru/SadTalker | AI_Avatar_Models/SadTalker/ | /kaggle/working/models/SadTalker/ | ~2.5 GB | ~2.5 GB |
+| Easy-Wav2Lip | numz/wav2lip_studio-0.2 | AI_Avatar_Models/Easy-Wav2Lip/ | /kaggle/working/models/Easy-Wav2Lip/ | ~1.5 GB | ~1.5 GB |
+| **Total** | | **~19.0 GB** (split 2 accounts) | **~21.7 GB** (1 dataset) | | |
+
+#### Download for Google Drive (Optimized - safetensors only)
+
+```python
+# Account A: Visual Models (safetensors only)
+!huggingface-cli download Wan-AI/Wan2.1-T2V-1.3B --include "*.safetensors" --local-dir {target}/Wan2.1-1.3B
+!huggingface-cli download guoyww/animatediff --include "*.safetensors" --local-dir {target}/AnimateDiff
+!huggingface-cli download runwayml/stable-diffusion-v1-5 --include "*.safetensors" --local-dir {target}/SD1.5_Base
+
+# Account B: Audio & Avatar Models
+!huggingface-cli download suno/bark --local-dir {target}/Bark_TTS
+!huggingface-cli download camenduru/SadTalker --include "checkpoints/*" --local-dir {target}/SadTalker
+!huggingface-cli download numz/wav2lip_studio-0.2 --include "checkpoints/*" --local-dir {target}/Easy-Wav2Lip
+```
+
+#### Download for Kaggle (Full sizes - all in 1 dataset)
+
+```python
+# All models (full download, no --include filter)
+!huggingface-cli download Wan-AI/Wan2.1-T2V-1.3B --local-dir {target}/Wan2.1-1.3B
+!huggingface-cli download guoyww/animatediff --local-dir {target}/AnimateDiff
+!huggingface-cli download runwayml/stable-diffusion-v1-5 --local-dir {target}/SD1.5_Base
+!huggingface-cli download suno/bark --local-dir {target}/Bark_TTS
+!huggingface-cli download camenduru/SadTalker --local-dir {target}/SadTalker
+!huggingface-cli download numz/wav2lip_studio-0.2 --local-dir {target}/Easy-Wav2Lip
+```
+!huggingface-cli download camenduru/SadTalker --include "checkpoints/*" --local-dir {target}/SadTalker
+!huggingface-cli download numz/wav2lip_studio-0.2 --include "checkpoints/*" --local-dir {target}/Easy-Wav2Lip
+```
 
 #### Summary
 
