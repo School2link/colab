@@ -31,7 +31,7 @@ $ErrorActionPreference = "Continue"
 
 # Configuration
 $MODELS = @(
-    @{ Name="wan21"; Slug="download-wan-2-1"; Notebook="download-wan21.ipynb"; Dataset="kingtechie/wan21-model"; Size="6.5GB"; HF="Wan-AI/Wan2.1-T2V-1.3B" }
+    @{ Name="wan21"; Slug="download-wan21"; Notebook="download-wan21.ipynb"; Dataset="kingtechie/wan21-model"; Size="6.5GB"; HF="Wan-AI/Wan2.1-T2V-1.3B" }
     @{ Name="animatediff"; Slug="download-animatediff"; Notebook="download-animatediff.ipynb"; Dataset="kingtechie/animatediff-model"; Size="3.5GB"; HF="guoyww/animatediff" }
     @{ Name="sd15"; Slug="download-sd15"; Notebook="download-sd15.ipynb"; Dataset="kingtechie/sd15-model"; Size="3.2GB"; HF="runwayml/stable-diffusion-v1-5" }
     @{ Name="bark"; Slug="download-bark"; Notebook="download-bark.ipynb"; Dataset="kingtechie/bark-model"; Size="4.5GB"; HF="suno/bark" }

@@ -171,76 +171,67 @@ Voice Presets: v2/en_speaker_0 through v2/en_speaker_9
 
 ## 3. Storage Layout
 
-All models are stored in a single Kaggle Dataset.
+All models are stored in separate Kaggle Datasets (one per model) to stay within the 19.5GB working directory limit.
 
-### Kaggle Dataset
+### Kaggle Datasets
 
-| Dataset Name              | Models                                                                     | Size     | URL                                                       |
-| ------------------------- | -------------------------------------------------------------------------- | -------- | --------------------------------------------------------- |
-| kingtechie/fako-ai-models | All 6 models (Bark, SadTalker, Easy-Wav2Lip, Wan 2.1, AnimateDiff, SD 1.5) | ~21.7 GB | https://www.kaggle.com/datasets/kingtechie/fako-ai-models |
+| Dataset Name                | Model           | Size     | URL                                                              |
+| --------------------------- | --------------- | -------- | ---------------------------------------------------------------- |
+| kingtechie/wan21-model      | Wan 2.1 1.3B    | ~18 GB   | https://www.kaggle.com/datasets/kingtechie/wan21-model           |
+| kingtechie/animatediff-model | AnimateDiff    | ~3.5 GB  | https://www.kaggle.com/datasets/kingtechie/animatediff-model     |
+| kingtechie/sd15-model       | SD 1.5          | ~3.2 GB  | https://www.kaggle.com/datasets/kingtechie/sd15-model            |
+| kingtechie/bark-model       | Bark TTS        | ~4 GB    | https://www.kaggle.com/datasets/kingtechie/bark-model            |
+| kingtechie/sadtalker-model  | SadTalker       | ~2.5 GB  | https://www.kaggle.com/datasets/kingtechie/sadtalker-model       |
+| kingtechie/wav2lip-model    | Easy-Wav2Lip    | ~1.5 GB  | https://www.kaggle.com/datasets/kingtechie/wav2lip-model         |
 
-Kaggle provides 100GB of private dataset storage, so all models fit comfortably in a single dataset.
+### Kaggle Session Paths
 
-### Model Breakdown
+Each dataset mounts to `/kaggle/input/[dataset-name]`:
 
-| Model           | Hugging Face Repo              | Target (Kaggle)                      | Size    |
-| --------------- | ------------------------------ | ------------------------------------ | ------- |
-| Wan 2.1 (1.3B)  | Wan-AI/Wan2.1-T2V-1.3B         | /kaggle/working/models/Wan2.1-1.3B/  | ~6.5 GB |
-| AnimateDiff     | guoyww/animatediff             | /kaggle/working/models/AnimateDiff/  | ~3.5 GB |
-| SD 1.5          | runwayml/stable-diffusion-v1-5 | /kaggle/working/models/SD1.5_Base/   | ~3.2 GB |
-| Bark            | suno/bark                      | /kaggle/working/models/Bark_TTS/     | ~4.5 GB |
-| SadTalker       | camenduru/SadTalker            | /kaggle/working/models/SadTalker/    | ~2.5 GB |
-| Easy-Wav2Lip    | numz/wav2lip_studio-0.2        | /kaggle/working/models/Easy-Wav2Lip/ | ~1.5 GB |
-| **Total**       |                                | **~21.7 GB** (1 dataset)             |         |
+| Model           | Mount Path                              |
+| --------------- | --------------------------------------- |
+| Wan 2.1         | `/kaggle/input/wan21-model`             |
+| AnimateDiff     | `/kaggle/input/animatediff-model`       |
+| SD 1.5          | `/kaggle/input/sd15-model`              |
+| Bark TTS        | `/kaggle/input/bark-model`              |
+| SadTalker       | `/kaggle/input/sadtalker-model`         |
+| Easy-Wav2Lip    | `/kaggle/input/wav2lip-model`           |
 
 ### Downloading Models
 
 **IMPORTANT: Never download model files to your local PC.**
 
-Downloading 10-15 GB of model weights to your computer and then re-uploading to Kaggle wastes local storage, time, and bandwidth.
-
 Instead, let Kaggle download directly over its high-speed connections (~100+ MB/s).
 
-#### First-Time Setup
+#### Individual Download Notebooks
 
-Upload `kaggle/download-all-models.ipynb` to Kaggle and run it. This downloads all models to `/kaggle/working/`. Then click **Save Version** to export as a permanent dataset.
+Each model has its own download notebook in `colab/`:
 
-Alternatively, run this in any Kaggle notebook with Internet enabled:
+| Notebook                  | Downloads To                          | Target Dataset             |
+| ------------------------- | ------------------------------------- | -------------------------- |
+| download-wan21.ipynb      | Wan 2.1 (18GB)                        | kingtechie/wan21-model     |
+| download-animatediff.ipynb | AnimateDiff (~3.5GB)                 | kingtechie/animatediff-model |
+| download-sd15.ipynb       | SD 1.5 (~3.2GB)                       | kingtechie/sd15-model      |
+| download-bark.ipynb       | Bark TTS core files (~4GB)            | kingtechie/bark-model      |
+| download-sadtalker.ipynb  | SadTalker checkpoints (~2.5GB)        | kingtechie/sadtalker-model |
+| download-wav2lip.ipynb    | Easy-Wav2Lip (~1.5GB)                 | kingtechie/wav2lip-model   |
 
-```python
-import os
-
-target_folder = "/kaggle/working/models"
-os.makedirs(target_folder, exist_ok=True)
-
-!pip install -q huggingface_hub
-!huggingface-cli download Wan-AI/Wan2.1-T2V-1.3B --local-dir {target_folder}/Wan2.1-1.3B
-!huggingface-cli download guoyww/animatediff --local-dir {target_folder}/AnimateDiff
-!huggingface-cli download runwayml/stable-diffusion-v1-5 --local-dir {target_folder}/SD1.5_Base
-!huggingface-cli download suno/bark --local-dir {target_folder}/Bark_TTS
-!huggingface-cli download camenduru/SadTalker --local-dir {target_folder}/SadTalker
-!huggingface-cli download numz/wav2lip_studio-0.2 --local-dir {target_folder}/Easy-Wav2Lip
-```
-
-### Kaggle Session Init Code
+#### Kaggle Session Init Code
 
 ```python
 import os
 
-models_dir = "/kaggle/input/fako-ai-models"
-working_dir = "/kaggle/working"
+WORKING_DIR = "/kaggle/working/outputs"
+os.makedirs(WORKING_DIR, exist_ok=True)
 
-os.makedirs(f"{working_dir}/SadTalker/checkpoints", exist_ok=True)
-os.makedirs(f"{working_dir}/Easy-Wav2Lip/checkpoints", exist_ok=True)
-os.makedirs(f"{working_dir}/outputs", exist_ok=True)
+BARK_DIR = "/kaggle/input/bark-model"
+SADTALKER_DIR = "/kaggle/input/sadtalker-model"
+WAV2LIP_DIR = "/kaggle/input/wav2lip-model"
+WAN_MODEL_DIR = "/kaggle/input/wan21-model"
+SD15_DIR = "/kaggle/input/sd15-model"
+ANIMEDIFF_DIR = "/kaggle/input/animatediff-model"
 
-!cp -r {models_dir}/SadTalker/* {working_dir}/SadTalker/checkpoints/ 2>/dev/null || true
-!cp -r {models_dir}/Easy-Wav2Lip/* {working_dir}/Easy-Wav2Lip/checkpoints/ 2>/dev/null || true
-
-os.environ["SUNO_OFFLOAD_CPU"] = "True"
-os.environ["HF_HOME"] = f"{models_dir}/Bark_TTS"
-
-print("All models linked from dataset!")
+print("All models mounted from individual datasets!")
 ```
 
 #### Summary
@@ -262,13 +253,13 @@ Kaggle limits GPU usage to ~30 hours/week per account. For higher throughput, us
 | Account A  | Primary  | Owner             | Day-to-day generation, all notebooks     |
 | Account B  | Backup   | Collaborator      | Overflow when A hits weekly quota limit  |
 
-### Sharing the Dataset Across Accounts
+### Sharing the Datasets Across Accounts
 
-The `kingtechie/fako-ai-models` dataset (~21.7 GB) must be accessible to both accounts.
+All 6 individual datasets must be accessible to both accounts.
 
-1. **Account A** creates the dataset and uploads all models
-2. Account A goes to **Dataset Settings** → **Collaborators** → adds Account B's Kaggle username
-3. **Account B** can now attach the same dataset in any notebook via **Add Data** → search for `kingtechie/fako-ai-models`
+1. **Account A** creates the datasets and uploads all models
+2. Account A goes to each dataset's **Settings** → **Collaborators** → adds Account B's Kaggle username
+3. **Account B** can now attach the same datasets in any notebook via **Add Data** → search for `kingtechie/[dataset-name]`
 
 **Important:** The dataset owner (Account A) must explicitly grant collaborator access. Shared datasets are read-only for collaborators.
 
@@ -279,8 +270,8 @@ When Account A hits the ~30 hr/week GPU quota:
 1. Log out of Kaggle
 2. Log in with Account B credentials
 3. Open the same notebook (or re-upload if using a different account)
-4. Attach `kingtechie/fako-ai-models` via Add Data
-5. The dataset is identical — no re-downloading needed
+4. Attach all needed datasets via Add Data
+5. The datasets are identical — no re-downloading needed
 
 ### Tips
 
@@ -317,7 +308,12 @@ LocalContents/
     full-pipeline-server.ipynb       # Bark + SadTalker + Easy-Wav2Lip (port 8000)
     broll-server.ipynb               # Wan 2.1 B-Roll (port 8001)
     styled-scene-server.ipynb        # AnimateDiff + ControlNet (port 8002)
-    download-all-models.ipynb        # One-time download to Kaggle dataset
+    download-wan21.ipynb             # Downloads Wan 2.1 → kingtechie/wan21-model
+    download-animatediff.ipynb       # Downloads AnimateDiff → kingtechie/animatediff-model
+    download-sd15.ipynb              # Downloads SD 1.5 → kingtechie/sd15-model
+    download-bark.ipynb              # Downloads Bark TTS → kingtechie/bark-model
+    download-sadtalker.ipynb         # Downloads SadTalker → kingtechie/sadtalker-model
+    download-wav2lip.ipynb           # Downloads Easy-Wav2Lip → kingtechie/wav2lip-model
     *-metadata.json                  # Kaggle kernel metadata files
 ```
 
@@ -362,7 +358,10 @@ LocalContents/
 
 1. Open the needed Kaggle notebook (full-pipeline, broll, or styled)
 2. Set Accelerator to GPU T4 x2
-3. Attach the `kingtechie/fako-ai-models` dataset
+3. Attach the required datasets via **Add Data**:
+   - Full Pipeline: `kingtechie/bark-model`, `kingtechie/sadtalker-model`, `kingtechie/wav2lip-model`
+   - B-Roll: `kingtechie/wan21-model`
+   - Styled Scene: `kingtechie/sd15-model`, `kingtechie/animatediff-model`
 4. Run all cells
 5. Copy the ngrok URL to `.env` as `KAGGLE_API_URL`
 6. Run CLI commands locally
@@ -416,7 +415,7 @@ npm run render:churches
 | Bark audio robotic        | Try different voice preset                           |
 | Render fails              | Check TypeScript errors                              |
 | GPU OOM                   | Use T4x2 accelerator (32GB VRAM) or reduce batch size |
-| Dataset not found         | Verify dataset is attached via Add Data in notebook  |
+| Dataset not found         | Verify datasets are attached via Add Data in notebook  |
 | Notebook won't connect    | Ensure Internet is enabled in notebook settings      |
 | Slow model loading        | Models cache after first run — subsequent loads are faster |
 | Session timeout           | Kaggle sessions auto-stop after ~12 hours; re-run    |
