@@ -144,6 +144,28 @@ models = [
                 "vae/diffusion_pytorch_model.bin"
             ])
         ]
+    },
+    {
+        "name": "LatentSync",
+        "dataset_id": "kingtechie/latentsync-model",
+        "model_dir": "latentsync-model",
+        "filename": "download-latentsync.ipynb",
+        "downloads": [
+            ("ByteDance/LatentSync", [
+                "latentsync_unet.pt",
+                "latentsync_syncnet.pt",
+                "config.json",
+                "whisper/tiny.pt",
+                "auxiliary/2DFAN4-cd938726ad.zip",
+                "auxiliary/i3d_torchscript.pt",
+                "auxiliary/koniq_pretrained.pkl",
+                "auxiliary/s3fd-619a316812.pth",
+                "auxiliary/sfd_face.pth",
+                "auxiliary/syncnet_v2.model",
+                "auxiliary/vgg16-397923af.pth",
+                "auxiliary/vit_g_hybrid_pt_1200e_ssv2_ft.pth"
+            ])
+        ]
     }
 ]
 

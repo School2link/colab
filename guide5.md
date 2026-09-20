@@ -94,6 +94,7 @@ All AI models run on Kaggle (T4 GPU). Plans can specify that assets be generated
 | Emotional voiceover   | Bark TTS     | /generate-tts    | Text with tags | .wav   |
 | Talking head video    | SadTalker    | /generate-avatar | Image + audio  | .mp4   |
 | Refined lip sync      | Easy-Wav2Lip | /generate-full   | Video + audio  | .mp4   |
+| Lip sync (diffusion)  | LatentSync   | /generate-lipsync | Video + audio | .mp4  |
 | B-Roll clip           | Wan 2.1      | /generate-broll  | Text prompt    | .mp4   |
 | Styled scene          | AnimateDiff  | /generate-styled | Image + prompt | .mp4   |
 
@@ -150,7 +151,8 @@ All AI models run on Kaggle (T4 GPU). Plans can specify that assets be generated
 | ------------------------ | ---------------------- | -------------------------- | ---------- |
 | Bark (Suno)              | Emotional TTS          | Text with [laughs] [gasps] | .wav audio |
 | SadTalker                | Talking head animation | Photo + audio              | .mp4 video |
-| Easy-Wav2Lip             | Lip sync refinement    | Video + audio              | .mp4 video |
+| Easy-Wav2Lip             | Lip sync (GAN)         | Video + audio              | .mp4 video |
+| LatentSync               | Lip sync (diffusion)   | Video + audio              | .mp4 video |
 | Wan 2.1 (1.3B)           | B-Roll generation      | Text prompt                | .mp4 video |
 | AnimateDiff + ControlNet | Style consistency      | Image + text prompt        | .mp4 video |
 
@@ -183,6 +185,7 @@ All models are stored in separate Kaggle Datasets (one per model) to stay within
 | kingtechie/bark-model       | Bark TTS        | ~4 GB    | https://www.kaggle.com/datasets/kingtechie/bark-model            |
 | kingtechie/sadtalker-model  | SadTalker       | ~2.5 GB  | https://www.kaggle.com/datasets/kingtechie/sadtalker-model       |
 | kingtechie/wav2lip-model    | Easy-Wav2Lip    | ~1.5 GB  | https://www.kaggle.com/datasets/kingtechie/wav2lip-model         |
+| kingtechie/latentsync-model | LatentSync      | ~8 GB    | https://www.kaggle.com/datasets/kingtechie/latentsync-model      |
 
 ### Kaggle Session Paths
 
@@ -196,6 +199,7 @@ Each dataset mounts to `/kaggle/input/[dataset-name]`:
 | Bark TTS        | `/kaggle/input/bark-model`              |
 | SadTalker       | `/kaggle/input/sadtalker-model`         |
 | Easy-Wav2Lip    | `/kaggle/input/wav2lip-model`           |
+| LatentSync      | `/kaggle/input/latentsync-model`        |
 
 ### Downloading Models
 
@@ -215,6 +219,7 @@ Each model has its own download notebook in `colab/`:
 | download-bark.ipynb       | Bark TTS core files (~4GB)            | kingtechie/bark-model      |
 | download-sadtalker.ipynb  | SadTalker checkpoints (~2.5GB)        | kingtechie/sadtalker-model |
 | download-wav2lip.ipynb    | Easy-Wav2Lip (~1.5GB)                 | kingtechie/wav2lip-model   |
+| download-latentsync.ipynb | LatentSync (~8GB)                     | kingtechie/latentsync-model |
 
 #### Kaggle Session Init Code
 
@@ -227,6 +232,7 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 BARK_DIR = "/kaggle/input/bark-model"
 SADTALKER_DIR = "/kaggle/input/sadtalker-model"
 WAV2LIP_DIR = "/kaggle/input/wav2lip-model"
+LATENTSYNC_DIR = "/kaggle/input/latentsync-model"
 WAN_MODEL_DIR = "/kaggle/input/wan21-model"
 SD15_DIR = "/kaggle/input/sd15-model"
 ANIMEDIFF_DIR = "/kaggle/input/animatediff-model"
@@ -318,6 +324,8 @@ print(f"Done! Files: {file_count}, Size: {total_size / 1024**3:.2f} GB")
 
 Add a second code cell to auto-publish:
 
+**Option A: For models under ~5GB (uses kagglehub):**
+
 ```python
 import kagglehub
 
@@ -330,6 +338,17 @@ kagglehub.dataset_upload(
     version_notes="Initial download - [Model Name]"
 )
 print(f"Published: https://www.kaggle.com/datasets/{DATASET_ID}")
+```
+
+**Option B: For models over ~5GB (avoids Kaggle backend creation bug):**
+
+First, create the empty dataset shell in the Kaggle UI (+ New Dataset → title → Create). Then use:
+
+```python
+import os
+
+# Push model files as a new version to the existing dataset
+!kaggle datasets version -p {MODEL_DIR} -m "Initial download - [Model Name]" --dir-mode zip
 ```
 
 #### 4. Push to Kaggle
@@ -472,6 +491,7 @@ LocalContents/
     download-bark.ipynb                # Downloads Bark TTS → kingtechie/bark-model
     download-sadtalker.ipynb           # Downloads SadTalker → kingtechie/sadtalker-model
     download-wav2lip.ipynb             # Downloads Easy-Wav2Lip → kingtechie/wav2lip-model
+    download-latentsync.ipynb          # Downloads LatentSync → kingtechie/latentsync-model
   kaggle-push/                        # Working dir for Kaggle kernel pushes
     kernel-metadata.json
 ```
