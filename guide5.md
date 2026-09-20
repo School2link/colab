@@ -730,9 +730,26 @@ For each scene in the plan, follow the decision tree:
 1. Update fako_video_data.json with all assets
 2. Run: `npm run render:[track]`
 
-### Kaggle Session
+### Kaggle API Credentials
 
-Each server provides different AI capabilities:
+**Location:** `~/.kaggle/kaggle.json`
+
+| OS | Path |
+|----|------|
+| Windows | `C:\Users\<username>\.kaggle\kaggle.json` |
+| macOS/Linux | `~/.kaggle/kaggle.json` |
+
+**Contents:**
+```json
+{
+  "username": "your-kaggle-username",
+  "key": "your-kaggle-api-key"
+}
+```
+
+All `kaggle` CLI commands use these credentials automatically.
+
+### Server Capabilities
 
 | Server | Port | Notebook | Datasets Needed | Capabilities |
 |--------|------|----------|----------------|--------------|
@@ -740,58 +757,115 @@ Each server provides different AI capabilities:
 | B-Roll | 8001 | `broll-server-kaggle.ipynb` | wan21-model | Wan 2.1 text-to-video |
 | Styled Scene | 8002 | `styled-scene-server-kaggle.ipynb` | sd15-model, animatediff-model | SD 1.5 image gen, AnimateDiff animation |
 
-### Starting a Kaggle Server (Step-by-Step)
+### Starting a Kaggle Server (CLI)
 
-**Step 1: Open the Kaggle notebook**
+All operations run from your local terminal. No browser needed.
 
-Go to [kaggle.com/code](https://www.kaggle.com/code) and open the notebook you need:
+**Step 1: Update kernel-metadata.json**
 
-| Task | Open This Notebook |
-|------|-------------------|
-| Talking head (TTS + avatar + lip sync) | `full-pipeline-server-kaggle.ipynb` |
-| B-Roll video generation | `broll-server-kaggle.ipynb` |
-| Image generation or styled animation | `styled-scene-server-kaggle.ipynb` |
+Edit `kaggle-push/kernel-metadata.json` for the server you want to start:
 
-**Step 2: Set the GPU accelerator**
+```json
+// Full Pipeline Server
+{
+  "id": "fako-online/full-pipeline-server",
+  "title": "Fako Online - Full Pipeline Server",
+  "code_file": "full-pipeline-server-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "kingtechie/bark-model",
+    "kingtechie/sadtalker-model",
+    "kingtechie/wav2lip-model"
+  ]
+}
+```
 
-1. Click the **Settings gear** icon (top right)
-2. Under **Accelerator**, select **GPU T4 x2**
-3. This gives you 32GB VRAM (enough for all models)
+```json
+// B-Roll Server
+{
+  "id": "fako-online/broll-server",
+  "title": "Fako Online - B-Roll Server",
+  "code_file": "broll-server-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "kingtechie/wan21-model"
+  ]
+}
+```
 
-**Step 3: Enable Internet access**
+```json
+// Styled Scene Server
+{
+  "id": "fako-online/styled-scene-server",
+  "title": "Fako Online - Styled Scene Server",
+  "code_file": "styled-scene-server-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "kingtechie/sd15-model",
+    "kingtechie/animatediff-model"
+  ]
+}
+```
 
-1. In the same Settings panel
-2. Toggle **Internet** → **On**
-3. Required for downloading models and ngrok tunnel
+**Step 2: Copy the notebook to kaggle-push/**
 
-**Step 4: Attach the required datasets**
+```powershell
+# For Full Pipeline
+Copy-Item colab/full-pipeline-server-kaggle.ipynb kaggle-push/
 
-1. Click **+ Add Data** (right panel)
-2. Search for each dataset by name: `kingtechie/[model-name]`
-3. Click **Attach** for each one
+# For B-Roll
+Copy-Item colab/broll-server-kaggle.ipynb kaggle-push/
 
-Example for Full Pipeline server:
-- Search `kingtechie/bark-model` → Attach
-- Search `kingtechie/sadtalker-model` → Attach
-- Search `kingtechie/wav2lip-model` → Attach
+# For Styled Scene
+Copy-Item colab/styled-scene-server-kaggle.ipynb kaggle-push/
+```
 
-**Step 5: Run all cells**
+**Step 3: Push and start the notebook**
 
-1. Click **Runtime** → **Run All** (or press `Ctrl+F9`)
-2. Wait for all cells to complete (first run takes 2-5 minutes for model loading)
-3. The last cell starts the FastAPI server + ngrok tunnel
+```powershell
+# Push with GPU T4 x2 accelerator
+kaggle kernels push -p ./kaggle-push --accelerator "GPU T4 x2"
+```
 
-**Step 6: Find the ngrok URL**
+This uploads the notebook AND starts it running on Kaggle with GPU.
 
-Scroll to the **output of the last cell**. Look for a line like:
+**Step 4: Check status**
 
+```powershell
+kaggle kernels status kingtechie/fako-online-full-pipeline-server
+```
+
+Wait until status shows `running` or `complete`.
+
+**Step 5: Get the ngrok URL from logs**
+
+```powershell
+kaggle kernels logs kingtechie/fako-online-full-pipeline-server
+```
+
+Look for a line like:
 ```
 Running on https://abc123-def456.ngrok-free.app
 ```
 
 Copy the full URL including `https://`.
 
-**Step 7: Update your .env file**
+**Step 6: Update .env**
 
 Open `.env` in the project root and paste the URL:
 
@@ -799,11 +873,7 @@ Open `.env` in the project root and paste the URL:
 KAGGLE_API_URL=https://abc123-def456.ngrok-free.app
 ```
 
-Save the file.
-
-**Step 8: Verify the connection**
-
-Run this command locally:
+**Step 7: Verify the connection**
 
 ```bash
 node scripts/generate-talking-head.js --check --api https://abc123-def456.ngrok-free.app
@@ -814,17 +884,24 @@ Expected output:
 {"status": "ok", "models": ["bark", "sadtalker", "wav2lip"]}
 ```
 
+### Stopping a Server
+
+```powershell
+# Delete the kernel to stop it
+kaggle kernels delete kingtechie/fako-online-full-pipeline-server
+```
+
 ### Which Server for What
 
-| I need to... | Start this server | Port |
-|-------------|-------------------|------|
-| Generate a voiceover (Bark TTS) | Full Pipeline | 8000 |
-| Animate a photo with voice (SadTalker) | Full Pipeline | 8000 |
-| Refine lip sync (Easy-Wav2Lip) | Full Pipeline | 8000 |
-| Generate a portrait/avatar (SD 1.5) | Styled Scene | 8002 |
-| Generate a background image (SD 1.5) | Styled Scene | 8002 |
-| Generate B-Roll video (Wan 2.1) | B-Roll | 8001 |
-| Animate image in a style (AnimateDiff) | Styled Scene | 8002 |
+| I need to... | Start this server | Port | Datasets to Attach |
+|-------------|-------------------|------|-------------------|
+| Generate a voiceover (Bark TTS) | Full Pipeline | 8000 | bark-model, sadtalker-model, wav2lip-model |
+| Animate a photo with voice (SadTalker) | Full Pipeline | 8000 | bark-model, sadtalker-model, wav2lip-model |
+| Refine lip sync (Easy-Wav2Lip) | Full Pipeline | 8000 | bark-model, sadtalker-model, wav2lip-model |
+| Generate a portrait/avatar (SD 1.5) | Styled Scene | 8002 | sd15-model, animatediff-model |
+| Generate a background image (SD 1.5) | Styled Scene | 8002 | sd15-model, animatediff-model |
+| Generate B-Roll video (Wan 2.1) | B-Roll | 8001 | wan21-model |
+| Animate image in a style (AnimateDiff) | Styled Scene | 8002 | sd15-model, animatediff-model |
 
 ### Session Limits and Tips
 
@@ -838,20 +915,21 @@ Expected output:
 **Tips:**
 - First run is slower (models load into GPU memory)
 - Subsequent runs in same session are faster (cached)
-- Keep the notebook tab open to prevent idle timeout
 - If ngrok URL stops working, restart the notebook and get a new URL
+- Use `kaggle kernels output` to download any generated files
 
 ### Troubleshooting
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| ngrok URL not appearing | Internet not enabled | Settings → Internet → On |
-| `Connection refused` | Server not running | Run all cells in the notebook |
-| `404 Not Found` | Wrong URL or stale ngrok | Copy new URL from notebook output |
-| `GPU OOM` | Not enough VRAM | Ensure T4 x2 accelerator is selected |
-| `No module named 'bark'` | Models not attached | Add datasets via + Add Data |
-| Session stopped | Idle timeout or quota exceeded | Restart notebook or switch accounts |
-| ngrok rate limit | Too many restarts | Wait 1 minute, then restart |
+| `403 Forbidden` | Wrong credentials | Check `~/.kaggle/kaggle.json` exists and is correct |
+| `Kernel not found` | Typo in kernel ID | Run `kaggle kernels list --mine` to see your kernels |
+| `Connection refused` | Server not running | Check `kaggle kernels status`, wait for `running` |
+| `404 Not Found` | Wrong URL or stale ngrok | Get new URL from `kaggle kernels logs` |
+| `GPU OOM` | Not enough VRAM | Ensure `--accelerator "GPU T4 x2"` on push |
+| `No space left` | Working directory full | Models should be in datasets, not working dir |
+| Session stopped | Idle timeout or quota | Push again with `kaggle kernels push` |
+| ngrok rate limit | Too many restarts | Wait 1 minute, then push again |
 
 ---
 
