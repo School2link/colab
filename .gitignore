@@ -38,3 +38,9 @@ dist/
 # Logs
 *.log
 npm-debug.log*
+logs*.txt
+wan21-logs.txt
+
+# Kaggle temporary output
+kaggle-output/
+wan21-output/
