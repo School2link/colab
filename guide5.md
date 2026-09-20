@@ -852,18 +852,38 @@ kaggle kernels status kingtechie/fako-online-full-pipeline-server
 
 Wait until status shows `running` or `complete`.
 
-**Step 5: Get the ngrok URL from logs**
+**Step 5: Get the ngrok URL**
+
+The ngrok URL is printed when the server starts, but Kaggle buffers stdout for long-running cells. The URL may not appear in `kaggle kernels logs` until the cell finishes.
+
+**Method 1: Open the notebook in Edit Mode (Recommended)**
+
+1. Go to [kaggle.com/code/kingtechie/fako-online-full-pipeline-server](https://www.kaggle.com/code/kingtechie/fako-online-full-pipeline-server)
+2. Click **Edit** to enter edit mode
+3. Scroll to the last cell (Cell 7: Start server)
+4. Look at the cell output for a line like:
+   ```
+   Public URL: https://abc123-def456.ngrok-free.app
+   ```
+5. Copy the full URL including `https://`
+
+**Method 2: Check the saved URL file**
+
+Each notebook saves the URL to `/kaggle/working/ngrok_url.txt`. After the notebook finishes or while running:
+
+```powershell
+# Download the URL file from the kernel output
+kaggle kernels output kingtechie/fako-online-full-pipeline-server -p ./kaggle-output
+type .\kaggle-output\ngrok_url.txt
+```
+
+**Method 3: Check logs (may not work for running kernels)**
 
 ```powershell
 kaggle kernels logs kingtechie/fako-online-full-pipeline-server
 ```
 
-Look for a line like:
-```
-Running on https://abc123-def456.ngrok-free.app
-```
-
-Copy the full URL including `https://`.
+Note: Logs only populate after the kernel finishes or errors. For running kernels, use Method 1 or 2.
 
 **Step 6: Update .env**
 
@@ -1020,7 +1040,182 @@ npm run studio
 | Render fails              | Check TypeScript errors                              |
 | GPU OOM                   | Use T4x2 accelerator (32GB VRAM) or reduce batch size |
 | Dataset not found         | Verify datasets are attached via Add Data in notebook  |
+| Datasets not mounted at `/kaggle/input/` | Wrong `id` in kernel-metadata.json | Pull metadata with `kaggle kernels pull -m`, verify `id`, add `dataset_sources`, push back |
 | Notebook won't connect    | Ensure Internet is enabled in notebook settings      |
 | Slow model loading        | Models cache after first run — subsequent loads are faster |
 | Session timeout           | Kaggle sessions auto-stop after ~12 hours; re-run    |
 | Can't share dataset       | Owner must add collaborator in Dataset Settings      |
+
+---
+
+## 12. Lessons Learned (Critical)
+
+### SadTalker Path Discovery (Nested Subdirectories)
+
+**Problem:** The `kingtechie/sadtalker-model` dataset has nested directories. The `src/` folder is often inside a subdirectory like `/kaggle/input/sadtalker-model/SadTalker/` or `/kaggle/input/sadtalker-model/sadtalker/`. Hardcoding `SADTALKER_DIR = "/kaggle/input/sadtalker-model"` and doing `from src.gradio_demo import SadTalker` fails with `FileNotFoundError` or `ModuleNotFoundError`.
+
+**Fix:** Detect subdirectories and use `os.chdir()` before importing:
+
+```python
+import os, sys, glob
+
+sadtalker_path = "/kaggle/input/sadtalker-model"
+
+# Check for nested subdirectories
+if os.path.exists(os.path.join(sadtalker_path, "SadTalker")):
+    sadtalker_path = os.path.join(sadtalker_path, "SadTalker")
+elif os.path.exists(os.path.join(sadtalker_path, "sadtalker")):
+    sadtalker_path = os.path.join(sadtalker_path, "sadtalker")
+
+# Discover actual paths
+sadtalker_gradio = glob.glob(f"{sadtalker_path}/**/src/gradio_demo.py", recursive=True)
+if sadtalker_gradio:
+    SADTALKER_ROOT = os.path.dirname(os.path.dirname(sadtalker_gradio[0]))
+else:
+    SADTALKER_ROOT = sadtalker_path
+
+# SadTalker relative imports require CWD set to the root
+if SADTALKER_ROOT not in sys.path:
+    sys.path.insert(0, SADTALKER_ROOT)
+os.chdir(SADTALKER_ROOT)
+
+from src.gradio_demo import SadTalker
+os.chdir("/kaggle/working")  # Switch back after import
+```
+
+Apply the same pattern for `checkpoints/`, `src/config/`, and `gfpgan/weights/`.
+
+### Lazy Model Loading (GPU OOM Prevention)
+
+**Problem:** Loading Bark + SadTalker + Easy-Wav2Lip simultaneously causes GPU OOM even on T4 x2 (32GB).
+
+**Fix:** Load models lazily — only when first API call arrives, move to CPU after each use:
+
+```python
+_bark_model = None
+_sadtalker_instance = None
+
+def get_bark():
+    global _bark_model
+    if _bark_model is None:
+        _bark_model = BarkModel.from_pretrained(BARK_DIR)
+    return _bark_model
+
+def unload_bark():
+    global _bark_model
+    del _bark_model
+    _bark_model = None
+    gc.collect()
+    torch.cuda.empty_cache()
+```
+
+In `/generate-full` endpoint: call `unload_bark()` before `get_sadtalker()` to free VRAM.
+
+### Windows PowerShell + Kaggle CLI Encoding
+
+**Problem:** `kaggle kernels logs` outputs Unicode characters that crash PowerShell with `'charmap' codec can't encode characters`.
+
+**Fix:** Use Python subprocess to capture logs as bytes:
+
+```python
+import subprocess
+result = subprocess.run(['kaggle', 'kernels', 'logs', 'kingtechie/kernel-id'],
+                       capture_output=True, text=True, encoding='utf-8', errors='replace')
+print(result.stdout)
+```
+
+Or check logs directly in the browser at `https://www.kaggle.com/code/[username]/[kernel-name]/log`.
+
+### Kernel Metadata: Always Pull First
+
+**Problem:** Writing `kernel-metadata.json` locally with a guessed `id` causes datasets to not be mounted. The `id` must match Kaggle's exact kernel ID.
+
+**Fix:** Always pull existing kernel metadata before editing:
+
+```bash
+kaggle kernels pull kingtechie/[kernel-name] -m
+```
+
+This creates `kaggle-push/kernel-metadata.json` with the exact `id`, title, and structure Kaggle expects. Then:
+1. Edit `dataset_sources` to include needed datasets
+2. Copy your updated notebook to `kaggle-push/`
+3. Push back: `kaggle kernels push -p ./kaggle-push`
+
+For brand-new kernels (never existed before), local metadata is fine.
+
+### PyTorch CUDA Device Properties Attribute
+
+**Problem:** `torch.cuda.get_device_properties(0).total_mem` raises `AttributeError` — the correct attribute is `total_memory`, not `total_mem`.
+
+**Fix:**
+```python
+# WRONG
+print(f"VRAM: {torch.cuda.get_device_properties(0).total_mem / 1024**3:.1f} GB")
+
+# CORRECT
+print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+```
+
+### Ngrok Requires Auth Token (Since ~2025)
+
+**Problem:** `ngrok.connect(8000)` fails with `ERR_NGROK_4018` — "authentication failed: This ngrok session is not authenticated."
+
+**Fix:** Set the auth token before connecting:
+```python
+from pyngrok import ngrok
+ngrok.set_auth_token("YOUR_NGROK_AUTHTOKEN")
+public_url = ngrok.connect(8000)
+```
+
+**Storage:** The auth token lives in `.env` as `NGROK_AUTHTOKEN=...` for reference, but must be hardcoded in notebook cells since Kaggle notebooks can't read local `.env` files.
+
+**Get your token:** https://dashboard.ngrok.com/get-started/your-authtoken
+
+### Jupyter asyncio Conflict with uvicorn.run()
+
+**Problem:** `uvicorn.run(app, host="0.0.0.0", port=8000)` fails with `RuntimeError: asyncio.run() cannot be called from a running event loop` because Jupyter already has a running event loop.
+
+**Fix:** Run uvicorn in a background thread:
+```python
+import threading
+import uvicorn
+
+def run_server():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+server_thread = threading.Thread(target=run_server, daemon=True)
+server_thread.start()
+
+# Keep alive (fixed duration, not infinite)
+import time
+for i in range(120):  # 2 hours
+    time.sleep(60)
+```
+
+### Kaggle Logs API + ngrok URL Retrieval
+
+**Problem:** `kaggle kernels logs` returns empty for running kernels (only populates after completion/error). The ngrok URL is printed in a long-running cell, so it's buffered and doesn't appear in logs.
+
+**Workarounds (in order of reliability):**
+
+1. **Open notebook in Edit Mode** — Go to `kaggle.com/code/[username]/[kernel-name]`, click Edit, scroll to the last cell output. The URL is always visible there.
+
+2. **Check saved URL file** — Each notebook saves the URL to `/kaggle/working/ngrok_url.txt`. After pushing:
+   ```powershell
+   kaggle kernels output kingtechie/[kernel-name] -p ./kaggle-output
+   type .\kaggle-output\ngrok_url.txt
+   ```
+   Note: `kaggle kernels output` only works after the kernel finishes or errors.
+
+3. **Use a fixed-duration loop** — The notebooks use `for i in range(120): time.sleep(60)` (2 hours) instead of `while True`, so the kernel eventually finishes and logs become available.
+
+### Execution Order: Images First, Then Audio, Then Lip Sync
+
+**Problem:** Lip syncing requires the image for that scene to already exist. If you generate audio first, then try to lip-sync, the image may not be ready yet.
+
+**Fix:** Follow this order:
+1. **Phase 1 — All images/video generation** (Styled Scene Server, port 8002): Generate all static images (dashboards, backgrounds) and animated scenes (AnimateDiff) first
+2. **Phase 2 — All audio** (Full Pipeline Server, port 8000): Generate all Bark TTS voiceovers
+3. **Phase 3 — All lip syncing** (Full Pipeline Server, port 8000): Combine images + audio via SadTalker + Easy-Wav2Lip
+4. **Phase 4 — B-Roll** (B-Roll Server, port 8001): Generate Wan 2.1 clips (no dependencies)
+5. **Phase 5 — Render** (local): Update `fako_video_data.json`, run `npm run render:businesses`
