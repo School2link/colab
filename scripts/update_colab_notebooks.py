@@ -194,7 +194,9 @@ models = [
         "downloads": [
             ("vinthony/SadTalker", [
                 "mapping_00109-model.pth.tar",
-                "mapping_00229-model.pth.tar",
+                "mapping_00229-model.pth.tar"
+            ]),
+            ("vinthony/SadTalker-V002rc", [
                 "SadTalker_V0.0.2_256.safetensors",
                 "SadTalker_V0.0.2_512.safetensors"
             ])
