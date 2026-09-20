@@ -1,0 +1,15 @@
+{
+  "id": "fako-online/download-sadtalker",
+  "title": "Fako Online - Download SadTalker",
+  "code_file": "download-sadtalker.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": []
+}

@@ -1,0 +1,15 @@
+{
+  "id": "fako-online/download-wav2lip",
+  "title": "Fako Online - Download Easy-Wav2Lip",
+  "code_file": "download-wav2lip.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": []
+}
