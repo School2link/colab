@@ -171,6 +171,195 @@ Voice Presets: v2/en_speaker_0 through v2/en_speaker_9
 
 ---
 
+## 2.5 Available Tools Reference
+
+This section is the **complete tool catalog** for plan authors. Every tool available in the engine, what it does, and when to use it.
+
+### A. AI Generation Tools (Kaggle GPU)
+
+All AI inference runs remotely on Kaggle GPU notebooks, exposed to the local machine via ngrok URLs.
+
+| Tool | Scene Type | Input | Output | When to Use | Server Port |
+| ---- | ---------- | ----- | ------ | ----------- | ----------- |
+| Bark TTS | Any scene needing speech | Text with emotional tags + voice preset | .wav audio | Voiceover for talking-head, narration, dialogue | 8000 |
+| SadTalker | Talking head | Photo + audio | .mp4 video | Animate a static portrait with voice | 8000 |
+| Easy-Wav2Lip | Talking head refinement | Video + audio | .mp4 video | Fix/improve lip sync after SadTalker | 8000 |
+| LatentSync | Lip sync (diffusion) | Video + audio | .mp4 video | Higher quality lip sync alternative (server not yet built) | N/A |
+| SD 1.5 | Image generation | Text prompt | .png image | Generate portraits, backgrounds, UI mockups, scene images | 8002 |
+| Wan 2.1 (1.3B) | B-Roll video | Text prompt | .mp4 video | Generate background video clips, product showcases | 8001 |
+| AnimateDiff + ControlNet | Styled animation | Image + text prompt | .mp4 video | Animate a static image in a new art style | 8002 |
+
+### B. Tool Decision Tree
+
+Use this flowchart when writing a plan to decide which tool to use for each scene:
+
+```
+What does this scene need?
+│
+├── Speech/Voiceover
+│   └── Bark TTS → generates .wav
+│       Voice presets: v2/en_speaker_0 through v2/en_speaker_9
+│       Emotional tags: [laughs], [gasps], [sighs], ALL CAPS, lowercase
+│
+├── Animated portrait (photo moves and speaks)
+│   ├── SadTalker → generates initial .mp4 from photo + audio
+│   └── Easy-Wav2Lip → refines lip sync (recommended for quality)
+│   └── OR LatentSync → alternative lip sync (higher quality, more VRAM)
+│
+├── Static image (portrait, background, UI mockup)
+│   ├── Provided by user → reference in plan as "provided: path/to/image"
+│   └── Generate → SD 1.5 text-to-image on port 8002
+│       Include prompt in plan: "Image Prompt: ..."
+│
+├── Background video (B-Roll)
+│   └── Wan 2.1 text-to-video on port 8001
+│       Include prompt in plan: "Prompt: ..."
+│       Specify duration in seconds
+│
+├── Animated styled scene (character in new art style)
+│   └── AnimateDiff + ControlNet on port 8002
+│       Requires source image + style prompt
+│
+└── Text overlay only (no AI needed)
+    └── Remotion handles this directly
+        Specify animation type: zoom, shake, cascade, scaleUp
+```
+
+### C. Remotion Composition Tools (Local)
+
+These components run locally on your PC during video rendering. No GPU needed.
+
+| Component | What It Does | Animation Options | Plan Field |
+| --------- | ------------ | ----------------- |------------|
+| KenBurnsImage | Animated image movement | `zoom-in`, `zoom-out`, `pan-right`, `pan-left` | `Animation: zoom-in` |
+| AnimatedText | Word-by-word spring animation | `zoom`, `shake`, `cascade`, `scaleUp` | `Animation: cascade` |
+| DarkScrim | Gradient overlay | `full` (full screen), `bottom` (lower third) | `Background: dark gradient` |
+| ImageScene | Static image + Ken Burns + text overlay | All KenBurns + AnimatedText options | `Type: image-scene` |
+| TalkingScene | Video (OffthreadVideo) or image with breathing + text | All KenBurns + AnimatedText options | `Type: talking-head` |
+| FakoContentTemplate | Main composition (3 scenes) | `fade`, `slide` transitions between scenes | Handled automatically |
+
+#### Animation Types in Detail
+
+| Animation | Behavior | Best For |
+|-----------|----------|----------|
+| `zoom-in` | Slowly zoom into center of image | Hero shots, emphasis, drama |
+| `zoom-out` | Slowly zoom out from center | Reveals, establishing shots |
+| `pan-right` | Slowly pan right across image | Landscape, product showcase |
+| `pan-left` | Slowly pan left across image | Reverse pan, reading direction |
+| `shake` | Quick shake/vibration | Excitement, urgency, impact |
+| `scaleUp` | Scale up from small to full size | Text emphasis, call-to-action |
+| `cascade` | Words appear one by one with spring | Lists, bullet points, multiple messages |
+| `zoom` (text) | Text zooms in from center | Headlines, big statements |
+
+### D. Local CLI Scripts
+
+Scripts that run on your local PC (no GPU needed):
+
+| Script | Command | Use Case |
+| ------ | ------- | -------- |
+| `generate-talking-head.js` | `--prompt "..." --api URL` | Generate avatar image from text via SD 1.5 |
+| `generate-talking-head.js` | `--image X --text "..." --api URL` | Full pipeline: Bark TTS + SadTalker + Easy-Wav2Lip |
+| `generate-talking-head.js` | `--image X --audio Y --api URL` | Talking head from pre-existing audio |
+| `generate-talking-head.js` | `--check --api URL` | Health check against running server |
+| `generate-avatar.js` | `--image X --audio Y` | Talking head via Gradio Space (fallback) |
+
+### E. Track System
+
+Each content track is a directory with standardized structure:
+
+| Track | Directory | Render Command |
+| ----- | --------- | -------------- |
+| ecommerce | `tracks/ecommerce/` | `npm run render:ecommerce` |
+| businesses | `tracks/businesses/` | `npm run render:businesses` |
+| schools | `tracks/schools/` | `npm run render:schools` |
+| churches | `tracks/churches/` | `npm run render:churches` |
+| promo | `tracks/promo-business/` | `npm run render:promo` |
+
+#### Asset Conventions per Track
+
+```
+tracks/[track]/
+  assets/          → Static images (screenshots, UI mockups, portraits)
+  voiceovers/      → Pre-generated .wav audio files
+  music/           → Background music files (.mp3, .wav)
+  data/
+    fako_video_data.json  → Timeline data (scenes, timing, branding)
+  out/
+    video.mp4      → Final rendered output
+```
+
+#### fako_video_data.json Structure
+
+```json
+{
+  "meta": {
+    "track": "ecommerce",
+    "branding": {
+      "primaryColor": "#D4AF37",
+      "backgroundColor": "#0A0A0A",
+      "fontFamily": "Impact"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/scene1.wav",
+      "bgMusic": "music/background.mp3"
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 4.0,
+      "text": "YOUR BUSINESS DESERVES TO BE ONLINE.",
+      "uiMockup": "assets/hero.png",
+      "animation": "shake",
+      "talkScene": false
+    }
+  ]
+}
+```
+
+### F. Complete API Endpoints
+
+When Kaggle notebooks are running and exposed via ngrok:
+
+#### Full Pipeline Server (port 8000)
+
+| Endpoint | Method | Parameters | Returns |
+| -------- | ------ | ---------- | ------- |
+| `/health` | GET | none | `{"status": "ok", "models": ["bark", "sadtalker", "wav2lip"]}` |
+| `/generate-tts` | POST | `text` (form), `voice_preset` (form, default `v2/en_speaker_6`) | .wav audio file |
+| `/generate-avatar` | POST | `image` (file upload), `audio` (file upload) | .mp4 video file |
+| `/generate-full` | POST | `image` (file), `text` (form), `voice_preset` (form), `refine_lips` (form, bool) | .mp4 video file |
+
+#### B-Roll Server (port 8001)
+
+| Endpoint | Method | Parameters | Returns |
+| -------- | ------ | ---------- | ------- |
+| `/health` | GET | none | `{"status": "ok", "model": "wan-2.1-1.3b"}` |
+| `/generate-broll` | POST | `text_prompt` (form), `duration` (form, int, default 5) | .mp4 video file |
+
+#### Styled Scene Server (port 8002)
+
+| Endpoint | Method | Parameters | Returns |
+| -------- | ------ | ---------- | ------- |
+| `/health` | GET | none | `{"status": "ok", "models": ["animatediff", "controlnet", "sd1.5"]}` |
+| `/generate-image` | POST | `text_prompt` (form), `width` (form, default 512), `height` (form, default 512) | .png image file |
+| `/generate-styled` | POST | `image` (file), `text_prompt` (form), `style_prompt` (form), `duration` (form, int) | .mp4 video file |
+
+### G. How to Choose: Quick Reference
+
+| I need to... | Use this tool | Port | Example plan entry |
+| ------------ | ------------- | ---- | ------------------ |
+| Generate a voiceover | Bark TTS | 8000 | `Audio: generate via Bark, text: "...", preset: v2/en_speaker_6` |
+| Animate a photo with voice | SadTalker + Easy-Wav2Lip | 8000 | `Type: talking-head, Image: generate via SD 1.5, Audio: generate via Bark` |
+| Generate a portrait/avatar | SD 1.5 | 8002 | `Image: generate, Image Prompt: "professional African business owner..."` |
+| Generate a background image | SD 1.5 | 8002 | `Image: generate, Image Prompt: "modern e-commerce dashboard..."` |
+| Generate a B-Roll clip | Wan 2.1 | 8001 | `Type: broll, Prompt: "modern shop with mobile money..."` |
+| Animate an image in a style | AnimateDiff | 8002 | `Type: styled, Style Prompt: "anime style, dynamic lighting..."` |
+| Add text overlay | Remotion | local | `Text Overlay: "SIGN UP FREE", Animation: cascade` |
+| Add Ken Burns effect | Remotion | local | `Animation: zoom-in, Background: dark gradient` |
+
+---
+
 ## 3. Storage Layout
 
 All models are stored in separate Kaggle Datasets (one per model) to stay within the 19.5GB working directory limit.
@@ -518,69 +707,122 @@ LocalContents/
 
 1. Copy the plan template above
 2. Fill in all scenes with explicit timestamps, sources, and text
-3. Set platform field to `kaggle`
-4. Save as plans/[content-name]-plan.md
-5. Review the plan for completeness
-6. Execute the plan using the tools below
+3. **Use the Tool Decision Tree (Section 2.5B) to choose the right tool for each scene**
+4. Set platform field to `kaggle`
+5. Save as plans/[content-name]-plan.md
+6. Review the plan for completeness
+7. Execute the plan using the tools below
 
 ### Executing a Plan
 
-1. Generate any needed images via SD 1.5
-2. Generate any needed audio via Bark TTS
-3. Generate talking-head videos via SadTalker + Easy-Wav2Lip
-4. Generate B-Roll clips via Wan 2.1
-5. Generate styled scenes via AnimateDiff + ControlNet
-6. Update fako_video_data.json with all assets
-7. Run: npm run render:[track]
+For each scene in the plan, follow the decision tree:
+
+| Scene Need | Action | Server |
+|------------|--------|--------|
+| Voiceover | Generate via Bark TTS | Full Pipeline (8000) |
+| Animated portrait | Generate photo via SD 1.5, then animate via SadTalker + Easy-Wav2Lip | Styled Scene (8002) → Full Pipeline (8000) |
+| Background image | Generate via SD 1.5 | Styled Scene (8002) |
+| B-Roll clip | Generate via Wan 2.1 | B-Roll (8001) |
+| Styled animation | Generate via AnimateDiff + ControlNet | Styled Scene (8002) |
+| Text overlay | Add directly in fako_video_data.json | Local (Remotion) |
+
+**Final steps:**
+1. Update fako_video_data.json with all assets
+2. Run: `npm run render:[track]`
 
 ### Kaggle Session
 
-1. Open the needed Kaggle notebook (full-pipeline, broll, or styled)
+Each server provides different AI capabilities:
+
+| Server | Port | Notebook | Datasets Needed | Capabilities |
+|--------|------|----------|----------------|--------------|
+| Full Pipeline | 8000 | `full-pipeline-server-kaggle.ipynb` | bark-model, sadtalker-model, wav2lip-model | Bark TTS, SadTalker, Easy-Wav2Lip |
+| B-Roll | 8001 | `broll-server-kaggle.ipynb` | wan21-model | Wan 2.1 text-to-video |
+| Styled Scene | 8002 | `styled-scene-server-kaggle.ipynb` | sd15-model, animatediff-model | SD 1.5 image gen, AnimateDiff animation |
+
+**To start a server:**
+1. Open the needed Kaggle notebook
 2. Set Accelerator to GPU T4 x2
-3. Attach the required datasets via **Add Data**:
-   - Full Pipeline: `kingtechie/bark-model`, `kingtechie/sadtalker-model`, `kingtechie/wav2lip-model`
-   - B-Roll: `kingtechie/wan21-model`
-   - Styled Scene: `kingtechie/sd15-model`, `kingtechie/animatediff-model`
+3. Attach the required datasets via **Add Data**
 4. Run all cells
 5. Copy the ngrok URL to `.env` as `KAGGLE_API_URL`
 6. Run CLI commands locally
-
-**Ports:** Full Pipeline = 8000 | B-Roll = 8001 | Styled Scene = 8002
 
 ---
 
 ## 9. CLI Commands
 
+### Content Generation
+
 ```bash
-# Generate avatar image from text prompt
+# Generate avatar image from text prompt (uses SD 1.5 on Styled Scene server)
 node scripts/generate-talking-head.js --prompt "professional African business owner, male, 30s, confident smile" --api URL
 
-# Generate talking head from text + image
+# Generate talking head from text + image (uses Bark + SadTalker + Easy-Wav2Lip on Full Pipeline server)
 node scripts/generate-talking-head.js --image photo.png --text "MAN: [gasps] Wait!" --api URL
 
-# Generate from pre-existing audio
+# Generate from pre-existing audio (uses SadTalker + Easy-Wav2Lip on Full Pipeline server)
 node scripts/generate-talking-head.js --image photo.png --audio voice.wav --api URL
 
-# Check API health
+# Check API health (tests connection to running server)
 node scripts/generate-talking-head.js --check --api URL
+```
 
-# Render video
+### Rendering
+
+```bash
+# Render single track
 npm run render:promo
 npm run render:ecommerce
 npm run render:businesses
 npm run render:schools
 npm run render:churches
+
+# Render all tracks
+npm run render:all
+
+# Open Remotion Studio (visual preview)
+npm run studio
 ```
 
 ---
 
 ## 10. Remotion Scene Types
 
-| Type                  | talkScene | video field      | Behavior                        |
-| --------------------- | --------- | ---------------- | ------------------------------- |
-| Talking Head          | true      | assets/video.mp4 | OffthreadVideo plays real video |
-| Talking Head Fallback | true      | empty            | Ken Burns breathing animation   |
-| Image Scene           | false     | -                | Ken Burns + text overlay        |
+### Scene Behaviors
+
+| Type | talkScene | video field | Behavior |
+| ---- | --------- | ----------- | -------- |
+| Talking Head | true | assets/video.mp4 | OffthreadVideo plays real video + text overlay |
+| Talking Head Fallback | true | empty | Ken Burns breathing animation on photo + text overlay |
+| Image Scene | false | - | Ken Burns effect on image + text overlay |
+
+### Supported Animations
+
+| Animation | Effect | Best For |
+|-----------|--------|----------|
+| zoom-in | Slowly zoom into center of image | Hero shots, emphasis, drama |
+| zoom-out | Slowly zoom out from center | Reveals, establishing shots |
+| pan-right | Slowly pan right across image | Landscape, product showcase |
+| pan-left | Slowly pan left across image | Reverse pan, reading direction |
+| shake | Quick shake/vibration | Excitement, urgency, impact |
+| scaleUp | Scale up from small to full size | Text emphasis, call-to-action |
+| cascade | Words appear one by one with spring | Lists, bullet points, multiple messages |
+| zoom (text) | Text zooms in from center | Headlines, big statements |
+
+### Transitions Between Scenes
+
+| Transition | Effect |
+|------------|--------|
+| fade | Cross-fade between scenes |
+| slide | Slide transition between scenes |
+
+### Text Overlay Rules
+
+- Primary color: #D4AF37 (gold)
+- Background: #0A0A0A (dark)
+- Font: Impact
+- Text animations: shake, scaleUp, zoom, cascade
 
 ---
 
