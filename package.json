@@ -1,0 +1,23 @@
+{
+  "name": "fako-content-engine",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "studio": "npx remotion studio packages/remotion-core/src/index.tsx",
+    "render:ecommerce": "npx remotion render packages/remotion-core/src/index.tsx FakoTemplate tracks/ecommerce/out/video.mp4 --props=tracks/ecommerce/data/fako_video_data.json --concurrency=8",
+    "render:businesses": "npx remotion render packages/remotion-core/src/index.tsx FakoTemplate tracks/businesses/out/video.mp4 --props=tracks/businesses/data/fako_video_data.json --concurrency=8",
+    "render:schools": "npx remotion render packages/remotion-core/src/index.tsx FakoTemplate tracks/schools/out/video.mp4 --props=tracks/schools/data/fako_video_data.json --concurrency=8",
+    "render:churches": "npx remotion render packages/remotion-core/src/index.tsx FakoTemplate tracks/churches/out/video.mp4 --props=tracks/churches/data/fako_video_data.json --concurrency=8",
+    "render:promo": "npx remotion render packages/remotion-core/src/index.tsx FakoTemplate tracks/promo-business/out/promo_business.mp4 --props=tracks/promo-business/data/fako_video_data.json --concurrency=8",
+    "render:all": "npm run render:ecommerce && npm run render:businesses && npm run render:schools && npm run render:churches"
+  },
+  "dependencies": {
+    "@gradio/client": "^2.7.0",
+    "@huggingface/inference": "^4.13.30",
+    "@remotion/noise": "^4.0.526",
+    "@remotion/transitions": "^4.0.526"
+  }
+}

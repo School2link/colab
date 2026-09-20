@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "track": "churches",
+    "branding": {
+      "primaryColor": "#FFD700",
+      "backgroundColor": "#1A0A2E",
+      "fontFamily": "Impact"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/churches_track_01.mp3",
+      "bgMusic": "music/worship_ambient_low.mp3"
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "text": "YOUR CHURCH DESERVES A DIGITAL HOME.",
+      "uiMockup": "assets/screenshots/church_old_site.png",
+      "animation": "shake"
+    },
+    {
+      "start": 2.5,
+      "end": 6.0,
+      "text": "SERVICE TIMES, LIVE STREAM & GIVING.",
+      "uiMockup": "assets/screenshots/fako_church_site.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "text": "REACH YOUR CONGREGATION ANYWHERE.",
+      "uiMockup": "assets/screenshots/fako_church_mobile.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 9.0,
+      "end": 12.0,
+      "text": "FAKO YOUR CHURCH ONLINE. BLESSED.",
+      "uiMockup": "assets/screenshots/fako_church_livestream.png",
+      "animation": "scaleUp"
+    }
+  ]
+}

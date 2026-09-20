@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "track": "businesses",
+    "branding": {
+      "primaryColor": "#00D4FF",
+      "backgroundColor": "#0A0A0A",
+      "fontFamily": "Montserrat"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/businesses_track_01.mp3",
+      "bgMusic": "music/corporate_clean_low.mp3"
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "text": "NO WEBSITE? NO TRUST.",
+      "uiMockup": "assets/screenshots/google_search.png",
+      "animation": "shake"
+    },
+    {
+      "start": 2.5,
+      "end": 6.0,
+      "text": "GET A PROFESSIONAL SITE IN 24 HOURS.",
+      "uiMockup": "assets/screenshots/fako_business_site.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "text": "FOUND ON GOOGLE & AI SEARCH.",
+      "uiMockup": "assets/screenshots/google_ai_result.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 9.0,
+      "end": 12.0,
+      "text": "FAKO YOUR BUSINESS ONLINE. FAST.",
+      "uiMockup": "assets/screenshots/fako_business_profile.png",
+      "animation": "scaleUp"
+    }
+  ]
+}

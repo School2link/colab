@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "track": "schools",
+    "branding": {
+      "primaryColor": "#4CAF50",
+      "backgroundColor": "#0A0A0A",
+      "fontFamily": "Syne"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/schools_track_01.mp3",
+      "bgMusic": "music/inspirational_low.mp3"
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "text": "PARENTS CAN'T FIND YOUR SCHOOL ONLINE.",
+      "uiMockup": "assets/screenshots/empty_search.png",
+      "animation": "shake"
+    },
+    {
+      "start": 2.5,
+      "end": 6.0,
+      "text": "MODERN WEBSITE WITH ADMISSIONS PORTAL.",
+      "uiMockup": "assets/screenshots/fako_school_site.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "text": "ONLINE REPORT CARDS & FEE PAYMENTS.",
+      "uiMockup": "assets/screenshots/fako_report_card.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 9.0,
+      "end": 12.0,
+      "text": "FAKO YOUR SCHOOL ONLINE. TODAY.",
+      "uiMockup": "assets/screenshots/fako_school_portal.png",
+      "animation": "scaleUp"
+    }
+  ]
+}

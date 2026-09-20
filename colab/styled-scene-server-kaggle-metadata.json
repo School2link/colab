@@ -1,0 +1,17 @@
+{
+  "id": "fako-online/styled-scene-server-kaggle",
+  "title": "Fako Online - Styled Scene Server (Kaggle)",
+  "code_file": "styled-scene-server-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "fako-online/fako-wan-animatediff-sd15"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": []
+}

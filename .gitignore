@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Environment / Secrets
+.env
+.env.*
+!.env.example
+
+# Generated outputs (regenerable)
+tracks/*/out/
+tracks/*/voiceovers/*.wav
+tracks/*/voiceovers/*.mp3
+tracks/*/music/*.mp3
+
+# Generated media assets
+public/assets/talking-head.mp4
+public/assets/generated-*.png
+public/voiceovers/*.wav
+
+# Track-specific binary assets (regenerable)
+tracks/*/assets/*.png
+tracks/*/assets/*.mp4
+tracks/*/assets/screenshots/*.png
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*

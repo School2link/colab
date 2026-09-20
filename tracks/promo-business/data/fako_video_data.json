@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "track": "promo-business",
+    "branding": {
+      "primaryColor": "#D4AF37",
+      "backgroundColor": "#0A0A0A",
+      "fontFamily": "Impact"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/your-business-deserves-to-be-o.wav",
+      "bgMusic": ""
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 4.0,
+      "text": "YOUR BUSINESS DESERVES TO BE ONLINE. NO TECH SKILLS? NO PROBLEM.",
+      "image": "assets/mainimage.png",
+      "video": "",
+      "talkScene": true,
+      "kenBurns": "zoomIn"
+    },
+    {
+      "start": 4.0,
+      "end": 9.0,
+      "text": "PRODUCTS. CHECKOUT. MOBILE MONEY. ALL IN ONE.",
+      "image": "assets/screenshots/scene2.png",
+      "kenBurns": "panRight"
+    },
+    {
+      "start": 9.0,
+      "end": 14.0,
+      "text": "SIGN UP FREE AT FAKO ONLINE.COM",
+      "image": "assets/screenshots/SCENE3.png",
+      "kenBurns": "zoomOut",
+      "isCTA": true
+    }
+  ]
+}

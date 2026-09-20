@@ -1,0 +1,44 @@
+{
+  "meta": {
+    "track": "ecommerce",
+    "branding": {
+      "primaryColor": "#D4AF37",
+      "backgroundColor": "#0A0A0A",
+      "fontFamily": "Impact"
+    },
+    "audio": {
+      "voiceFile": "voiceovers/ecommerce_track_01.mp3",
+      "bgMusic": "music/hype_afrobeats_low.mp3"
+    }
+  },
+  "timeline": [
+    {
+      "start": 0,
+      "end": 2.5,
+      "text": "STOP SELLING ONLY ON WHATSAPP.",
+      "uiMockup": "assets/screenshots/whatsapp_chat.png",
+      "animation": "shake"
+    },
+    {
+      "start": 2.5,
+      "end": 6.0,
+      "text": "GET A FULL STORE WITH MOBILE MONEY.",
+      "uiMockup": "assets/screenshots/fako_checkout.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "text": "YOUR CUSTOMERS ORDER. YOU GET PAID INSTANTLY.",
+      "uiMockup": "assets/screenshots/fako_dashboard.png",
+      "animation": "scaleUp"
+    },
+    {
+      "start": 9.0,
+      "end": 12.0,
+      "text": "FAKO YOUR SHOP ONLINE. FREE.",
+      "uiMockup": "assets/screenshots/fako_storefront.png",
+      "animation": "scaleUp"
+    }
+  ]
+}

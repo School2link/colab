@@ -1,0 +1,17 @@
+{
+  "id": "fako-online/full-pipeline-server-kaggle",
+  "title": "Fako Online - Full Pipeline Server (Kaggle)",
+  "code_file": "full-pipeline-server-kaggle.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [
+    "fako-online/fako-bark-sadtalker-wav2lip"
+  ],
+  "kernel_sources": [],
+  "competition_sources": [],
+  "model_sources": []
+}
