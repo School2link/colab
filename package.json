@@ -15,8 +15,6 @@
     "render:all": "npm run render:ecommerce && npm run render:businesses && npm run render:schools && npm run render:churches"
   },
   "dependencies": {
-    "@gradio/client": "^2.7.0",
-    "@huggingface/inference": "^4.13.30",
     "@remotion/noise": "^4.0.526",
     "@remotion/transitions": "^4.0.526"
   }

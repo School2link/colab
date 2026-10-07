@@ -13,14 +13,22 @@ tracks/*/voiceovers/*.mp3
 tracks/*/music/*.mp3
 
 # Generated media assets
-public/assets/talking-head.mp4
-public/assets/generated-*.png
 public/voiceovers/*.wav
 
 # Track-specific binary assets (regenerable)
 tracks/*/assets/*.png
 tracks/*/assets/*.mp4
 tracks/*/assets/screenshots/*.png
+
+# Blender pipeline (heavy/regenerable)
+global_assets/hdris/
+global_assets/textures/
+global_assets/models/report_cards.blend
+kaggle_worker/assets/
+kaggle_worker/sfx/
+kaggle_worker/report_cards.blend
+final_output/
+render_output.zip
 
 # OS files
 .DS_Store
@@ -39,8 +47,3 @@ dist/
 *.log
 npm-debug.log*
 logs*.txt
-wan21-logs.txt
-
-# Kaggle temporary output
-kaggle-output/
-wan21-output/
